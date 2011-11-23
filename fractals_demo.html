@@ -1,0 +1,56 @@
+<html>
+  <head>
+    <script type="text/javascript" src="fractals.js"></script>
+    <script type="text/javascript">
+        function test(){
+            c = document.getElementById("canvas");
+            fractal = new Fractal(c);
+            fractal.refresh();
+            document.getElementById("iterations").innerHTML = "itr = " + iterations;
+            document.getElementById("radius").innerHTML = "radius = " + radius;
+        }
+        function editIterations(){
+            var itr = prompt("iterations = ?",iterations);
+            if (itr == null || itr == "") return;
+            iterations = parseInt(itr);
+            document.getElementById("iterations").innerHTML = "itr = " + itr;
+            fractal.refresh();
+        }
+        function editRadius(){
+            var r = prompt("radius = ?",radius);
+            if (r == null || r == "") return;
+            radius = parseInt(r);
+            document.getElementById("radius").innerHTML = "radius = " + r;
+            fractal.refresh();
+        }
+    </script>
+  </head>
+  <body onload = "test();">
+    <br>
+    <br>
+    <br>
+    <br>
+    <div align="center">
+      <button id= "in" onclick="fractal.zoomIn();" > zoom in </button>
+      <button id= "refresh" onclick="fractal.refresh();" > refresh </button>
+      <button id= "out" onclick="fractal.zoomOut();" > zoom out </button>
+      <br />
+      <button id= "up" onclick="fractal.pan(1);" > up </button>
+      <br />
+      <button id= "left" onclick="fractal.pan(0);" > left </button>
+      <button id= "right" onclick="fractal.pan(2);" > right </button>
+      <br />
+      <button id= "down" onclick="fractal.pan(3);" > down </button>
+      <br />
+      <canvas id="canvas" width="400" height="400" style="border:solid;">
+      fractal canvas
+      </canvas>
+      <br />
+      <button id= "iterations" onclick="editIterations();" > itr = 15 </button>
+      <button id= "radius" onclick="editRadius();" > radius = 2.0 </button>
+    </div>
+
+    <div id="debug">
+    </div>
+  </body>
+</html>
