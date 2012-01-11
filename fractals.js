@@ -1,5 +1,6 @@
 iterations = 15;
 radius = 2.0;
+demo_id  = 0;
 //helper functions
 function debug(str){
 	document.getElementById("debug").innerHTML += str + "<br/>";
@@ -26,11 +27,9 @@ function Fractal(canvas){
         this.scaleY = 100;
         this.panX = 00;
         this.panY = 00;
+        //fractal
         this.c = new Complex(0.44,0.19);
-        iterations=50;
-        radius=30;
-        this.scaleX = 200;
-        this.scaleY = 200;
+
 
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d");
@@ -42,7 +41,6 @@ function Fractal(canvas){
             var t = me.toComplex(i,j);
             var x = t.x;
             var y = t.y;
-            //debug(i + " " + j);
             debug(x + " " + y);
         }
         var me = this;
@@ -95,16 +93,17 @@ Fractal.prototype.trace = function(x,y){
 
 }
 
-Fractal.prototype.refresh = function(){
+Fractal.prototype.redraw = function(x1,y1,x2,y2){
 	var start = (new Date()).getTime();
-	var imageData = this.ctx.createImageData(this.canvas.width,this.canvas.height);
+	//var imageData = this.ctx.createImageData(this.canvas.width,this.canvas.height);
+	var imageData = this.ctx.getImageData(0,0,this.canvas.width,this.canvas.height);
     var data = imageData.data;
     var backgroundColor = {r:0 , g:0 , b:0};
 
-    for (var j=0;j<this.canvas.height;j++){
+    for (var j=y1;j<y2;j++){
         var y = -j + this.canvas.height/2 - this.panY;
         y = y/this.scaleY;
-        for (var i=0;i<this.canvas.width;i++){
+        for (var i=x1;i<x2;i++){
             var x = i - this.canvas.width /2 - this.panX;
             x = x/this.scaleX;
 
@@ -150,31 +149,52 @@ Fractal.prototype.refresh = function(){
     }
 	this.ctx.putImageData(imageData, 0, 0);
 	var end = (new Date()).getTime();
+    debugClear();
 	debug("render time : " + (end-start)/1000 + " seconds");
+    debug("Scale = (" + this.scaleX + "," + this.scaleY + ")");
+    debug("Pan = (" + this.panX + "," + this.panY + ")");
+}
+
+Fractal.prototype.refresh = function(){
+    this.redraw(0,0,this.canvas.width,this.canvas.height);
 }
 
 Fractal.prototype.zoomIn = function(){
-    this.scaleX += 30;
-    this.scaleY += 30;
+    this.scaleX += 100;
+    this.scaleY += 100;
     this.refresh();
 }
 
 Fractal.prototype.zoomOut = function(){
-    this.scaleX -= 30;
-    this.scaleY -= 30;
+    this.scaleX -= 100;
+    this.scaleY -= 100;
+    if (this.scaleX <= 0) this.scaleX = 10;
+    if (this.scaleY <= 0) this.scaleY = 10;
     this.refresh();
 }
 
 Fractal.prototype.pan = function(direction){
-    if (direction == 0)
-        this.panX +=10;
-    else if (direction  == 1)
-        this.panY -=10;
-    else if (direction == 2)
-        this.panX -=10;
-    else if (direction == 3)
-        this.panY +=10;
-    this.refresh();
+    var delta = 30;
+    var img = this.ctx.getImageData(0,0,this.canvas.width,this.canvas.height);
+    if (direction == 0){
+        this.panX +=delta;
+        this.ctx.putImageData(img,+delta,0);
+        this.redraw(0,0,delta,this.canvas.height);
+    }else if (direction  == 1){
+        this.panY -=delta;
+        this.ctx.putImageData(img,0,+delta);
+        this.redraw(0,0,this.canvas.width,delta);
+    }else if (direction == 2){
+        this.panX -=delta;
+        this.ctx.putImageData(img,-delta,0);
+        this.redraw(this.canvas.width-delta,0,this.canvas.width,this.canvas.height);
+    }else if (direction == 3){
+        this.panY +=delta;
+        this.ctx.putImageData(img,0,-delta);
+        this.redraw(0,this.canvas.height-delta,this.canvas.width,this.canvas.height);
+    }
+    //this.refresh();
+
 }
 
 //--------------------------------------------
@@ -197,4 +217,58 @@ Complex.prototype.magnitude = function(){
 
 Complex.prototype.inspect = function(){
     return this.r + "," + this.i + "i";
+}
+//-------------------------------------------
+
+function demo_sequence(){
+    clearInterval(demo_id);
+    var i= 0.0;
+    var j = 0.0;
+    var count = 0;
+    radius = 20.0;
+    iterations = 50;
+    fractal.scaleX = 100;
+    fractal.scaleY = fractal.scaleX;
+    fractal.panX = 0;
+    fractal.panY = 0;
+    demo_id = setInterval(function(){
+            if (i >= 1.0) {
+                return;
+            }
+            if (j >= 1.0){
+                i += 0.05;
+                j  = 0.0;
+            }else j+=0.05;
+            fractal.c = new Complex(i,j);
+            fractal.refresh();
+            debugClear();
+            count++;
+            debug(count);
+            debug(fractal.c.inspect());
+        } , 1000);
+}
+
+function demo_random(){
+    clearInterval(demo_id);
+    var i= 0.0;
+    var j = 0.0;
+    var min_pan = -500 , max_pan = 500;
+    var min_zoom = 100 , max_zoom = 600;
+    var min_itr = 30, max_itr= 100;
+    var min_r = 12.0, max_r = 50.0;
+    demo_id = setInterval(function(){
+            i = Math.random();
+            j = Math.random();
+            radius = Math.floor(Math.random() * (max_r - min_r) + min_r);
+            iterations = Math.floor(Math.random() * (max_itr - min_itr) + min_itr);
+            fractal.scaleX = Math.floor(Math.random() * (max_zoom - min_zoom) + min_zoom);
+            fractal.scaleY = fractal.scaleX;
+            fractal.panX = Math.floor(Math.random() * (max_pan - min_pan) + min_pan);
+            fractal.panY = Math.floor(Math.random() * (max_pan - min_pan) + min_pan);
+            fractal.c = new Complex(i,j);
+            fractal.refresh();
+            debug(fractal.c.inspect());
+            debug("iterations = " + iterations);
+            debug("escape radius = " + radius);
+        } , 3000);
 }
